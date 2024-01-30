@@ -4,6 +4,6 @@ import { NinjasService } from './ninjas.service';
 
 @Module({
   controllers: [NinjasController],
-  providers: [NinjasService]
+  providers: [NinjasService],
 })
 export class NinjasModule {}
