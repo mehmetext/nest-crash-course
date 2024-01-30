@@ -15,10 +15,4 @@ export class AppController {
   showBody(@Body() body: any): any {
     return this.appService.showBody(body);
   }
-
-  @Get(':id')
-  getHelloById(): string {
-    console.log('AppController.getHelloById()');
-    return this.appService.getHello();
-  }
 }
