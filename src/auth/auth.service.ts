@@ -31,6 +31,4 @@ export class AuthService {
       token: this.jwtService.sign(payload),
     };
   }
-
-  async me() {}
 }
