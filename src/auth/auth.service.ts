@@ -1,9 +1,9 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { User } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import { toSeconds } from 'src/common/utils/to-seconds';
-import { User } from 'src/users/entities/user.entity';
 import { UsersService } from 'src/users/users.service';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
@@ -61,10 +61,10 @@ export class AuthService {
     };
   }
 
-  refreshToken(dto: RefreshTokenDto) {
+  async refreshToken(dto: RefreshTokenDto) {
     try {
-      const payload = this.jwtService.verify<{ sub: number }>(dto.refreshToken);
-      const user = this.usersService.findById(payload.sub);
+      const payload = this.jwtService.verify<{ sub: string }>(dto.refreshToken);
+      const user = await this.usersService.findById(payload.sub);
       if (!user) {
         throw new UnauthorizedException();
       }
@@ -92,7 +92,7 @@ export class AuthService {
   }
 
   async validateUser(dto: LoginDto) {
-    const user = this.usersService.findByUsername(dto.username);
+    const user = await this.usersService.findByUsername(dto.username);
 
     if (user && (await bcrypt.compare(dto.password, user.password))) {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
