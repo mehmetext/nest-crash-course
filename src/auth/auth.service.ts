@@ -5,6 +5,7 @@ import * as bcrypt from 'bcryptjs';
 import { toSeconds } from 'src/common/utils/to-seconds';
 import { User } from 'src/users/entities/user.entity';
 import { UsersService } from 'src/users/users.service';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
 
 @Injectable()
 export class AuthService {
@@ -36,17 +37,20 @@ export class AuthService {
     });
 
     return {
-      access_token: accessToken,
-      refresh_token: refreshToken,
-      expires_in: toSeconds(
-        this.configService.get<string>('JWT_ACCESS_EXPIRATION_TIME')!,
-      ),
+      tokens: {
+        accessToken,
+        refreshToken,
+        expiresIn: toSeconds(
+          this.configService.get<string>('JWT_ACCESS_EXPIRATION_TIME')!,
+        ),
+      },
+      user: user,
     };
   }
 
-  refreshToken(refreshToken: string) {
+  refreshToken(dto: RefreshTokenDto) {
     try {
-      const payload = this.jwtService.verify<{ sub: number }>(refreshToken);
+      const payload = this.jwtService.verify<{ sub: number }>(dto.refreshToken);
       const user = this.usersService.findById(payload.sub);
       if (!user) {
         throw new UnauthorizedException();
@@ -63,9 +67,9 @@ export class AuthService {
       });
 
       return {
-        access_token: newAccessToken,
-        refresh_token: newRefreshToken,
-        expires_in: toSeconds(
+        accessToken: newAccessToken,
+        refreshToken: newRefreshToken,
+        expiresIn: toSeconds(
           this.configService.get<string>('JWT_ACCESS_EXPIRATION_TIME')!,
         ),
       };
