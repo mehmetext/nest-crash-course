@@ -16,12 +16,13 @@ export class AuthService {
     private readonly configService: ConfigService,
   ) {
     if (
-      !this.configService.get<string>('JWT_SECRET') ||
+      !this.configService.get<string>('JWT_ACCESS_SECRET') ||
       !this.configService.get<string>('JWT_ACCESS_EXPIRATION_TIME') ||
+      !this.configService.get<string>('JWT_REFRESH_SECRET') ||
       !this.configService.get<string>('JWT_REFRESH_EXPIRATION_TIME')
     ) {
       throw new Error(
-        'JWT_SECRET, JWT_ACCESS_EXPIRATION_TIME, JWT_REFRESH_EXPIRATION_TIME are not defined in environment variables',
+        'JWT_ACCESS_SECRET, JWT_ACCESS_EXPIRATION_TIME, JWT_REFRESH_SECRET, JWT_REFRESH_EXPIRATION_TIME are not defined in environment variables',
       );
     }
   }
@@ -30,16 +31,18 @@ export class AuthService {
     const payload = { username: user.username, sub: user.id };
 
     const accessToken = this.jwtService.sign(payload, {
+      secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
       expiresIn:
         this.configService.get<string>('NODE_ENV') === 'development'
-          ? '1m'
+          ? '30d'
           : this.configService.get<string>('JWT_ACCESS_EXPIRATION_TIME'),
     });
 
     const refreshToken = this.jwtService.sign(payload, {
+      secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
       expiresIn:
         this.configService.get<string>('NODE_ENV') === 'development'
-          ? '1m'
+          ? '30d'
           : this.configService.get<string>('JWT_REFRESH_EXPIRATION_TIME'),
     });
 
@@ -48,7 +51,9 @@ export class AuthService {
         accessToken,
         refreshToken,
         expiresIn: toSeconds(
-          this.configService.get<string>('JWT_ACCESS_EXPIRATION_TIME')!,
+          this.configService.get<string>('NODE_ENV') === 'development'
+            ? '30d'
+            : this.configService.get<string>('JWT_ACCESS_EXPIRATION_TIME')!,
         ),
       },
       user: user,

@@ -1,6 +1,6 @@
 export const toSeconds = (ts: string) => {
   const raw = ts.split(` `);
-  const hms = `0h 0m 0s`
+  const hms = `0d 0h 0m 0s`
     .split(` `)
     .map((v) => raw.find((t) => t.slice(-1) === v.slice(-1)) || v);
 
