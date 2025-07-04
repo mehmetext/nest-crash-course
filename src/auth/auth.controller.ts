@@ -1,21 +1,22 @@
-import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { Request } from 'express';
-import { AuthGuard } from 'src/common/guards/auth.guard';
+import { User } from 'src/users/entities/user.entity';
 import { AuthService } from './auth.service';
-import { LoginDto } from './dto/login.dto';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @UseGuards(AuthGuard('local'))
   @Post('login')
-  async login(@Body() dto: LoginDto) {
-    return await this.authService.login(dto);
+  login(@Req() req: Request) {
+    return this.authService.login(req.user as Omit<User, 'password'>);
   }
 
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard('jwt'))
   @Get('me')
-  me(@Req() req: Request) {
+  getMe(@Req() req: Request) {
     return req.user;
   }
 }
