@@ -18,11 +18,13 @@ export class AuthService {
     };
   }
 
-  async validateUser(username: string, pass: string): Promise<User> {
+  async validateUser(username: string, pass: string) {
     const user = this.usersService.findByUsername(username);
 
     if (user && (await bcrypt.compare(pass, user.password))) {
-      return user;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { password, ...userWithoutPassword } = user;
+      return userWithoutPassword;
     }
 
     throw new UnauthorizedException();
