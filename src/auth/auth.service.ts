@@ -5,6 +5,7 @@ import * as bcrypt from 'bcryptjs';
 import { toSeconds } from 'src/common/utils/to-seconds';
 import { User } from 'src/users/entities/user.entity';
 import { UsersService } from 'src/users/users.service';
+import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 
 @Injectable()
@@ -78,10 +79,10 @@ export class AuthService {
     }
   }
 
-  async validateUser(username: string, pass: string) {
-    const user = this.usersService.findByUsername(username);
+  async validateUser(dto: LoginDto) {
+    const user = this.usersService.findByUsername(dto.username);
 
-    if (user && (await bcrypt.compare(pass, user.password))) {
+    if (user && (await bcrypt.compare(dto.password, user.password))) {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password, ...userWithoutPassword } = user;
       return userWithoutPassword;
