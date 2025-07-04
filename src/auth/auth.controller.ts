@@ -4,6 +4,7 @@ import { Request } from 'express';
 import { User } from 'src/users/entities/user.entity';
 import { AuthService } from './auth.service';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { RegisterDto } from './dto/register.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -24,5 +25,10 @@ export class AuthController {
   @Get('me')
   getMe(@Req() req: Request) {
     return req.user;
+  }
+
+  @Post('register')
+  register(@Body() dto: RegisterDto) {
+    return this.authService.register(dto);
   }
 }
