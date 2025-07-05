@@ -31,4 +31,15 @@ export class AuthController {
   register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
   }
+
+  @Post('logout')
+  logout(@Body() dto: RefreshTokenDto) {
+    return this.authService.logout(dto.refreshToken);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Post('logout-all')
+  logoutFromAllDevices(@Req() req: Request) {
+    return this.authService.logoutFromAllDevices((req.user as User).id);
+  }
 }

@@ -4,6 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import { User } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import { toSeconds } from 'src/common/utils/to-seconds';
+import { RefreshTokensService } from 'src/refresh-tokens/refresh-tokens.service';
 import { UsersService } from 'src/users/users.service';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
@@ -15,6 +16,7 @@ export class AuthService {
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly refreshTokensService: RefreshTokensService,
   ) {
     if (
       !this.configService.get<string>('JWT_ACCESS_SECRET') ||
@@ -28,34 +30,39 @@ export class AuthService {
     }
   }
 
-  login(user: Omit<User, 'password'>) {
+  async login(user: Omit<User, 'password'>) {
     const payload = { username: user.username, sub: user.id };
+    const accessTokenExpiresIn =
+      this.configService.get<string>('NODE_ENV') === 'development'
+        ? '30d'
+        : this.configService.get<string>('JWT_ACCESS_EXPIRATION_TIME')!;
+
+    const refreshTokenExpiresIn =
+      this.configService.get<string>('NODE_ENV') === 'development'
+        ? '30d'
+        : this.configService.get<string>('JWT_REFRESH_EXPIRATION_TIME')!;
 
     const accessToken = this.jwtService.sign(payload, {
       secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
-      expiresIn:
-        this.configService.get<string>('NODE_ENV') === 'development'
-          ? '30d'
-          : this.configService.get<string>('JWT_ACCESS_EXPIRATION_TIME'),
+      expiresIn: accessTokenExpiresIn,
     });
 
     const refreshToken = this.jwtService.sign(payload, {
       secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
-      expiresIn:
-        this.configService.get<string>('NODE_ENV') === 'development'
-          ? '30d'
-          : this.configService.get<string>('JWT_REFRESH_EXPIRATION_TIME'),
+      expiresIn: refreshTokenExpiresIn,
     });
+
+    await this.refreshTokensService.createRefreshToken(
+      user.id,
+      refreshToken,
+      new Date(Date.now() + toSeconds(refreshTokenExpiresIn) * 1000),
+    );
 
     return {
       tokens: {
         accessToken,
         refreshToken,
-        expiresIn: toSeconds(
-          this.configService.get<string>('NODE_ENV') === 'development'
-            ? '30d'
-            : this.configService.get<string>('JWT_ACCESS_EXPIRATION_TIME')!,
-        ),
+        expiresIn: toSeconds(accessTokenExpiresIn),
       },
       user: user,
     };
@@ -63,28 +70,49 @@ export class AuthService {
 
   async refreshToken(dto: RefreshTokenDto) {
     try {
+      const isValid = await this.refreshTokensService.isTokenValid(
+        dto.refreshToken,
+      );
+      if (!isValid) {
+        throw new UnauthorizedException();
+      }
+
       const payload = this.jwtService.verify<{ sub: string }>(dto.refreshToken);
       const user = await this.usersService.findById(payload.sub);
       if (!user) {
         throw new UnauthorizedException();
       }
 
+      await this.refreshTokensService.revokeToken(dto.refreshToken);
+
+      const accessTokenExpiresIn =
+        this.configService.get<string>('NODE_ENV') === 'development'
+          ? '30d'
+          : this.configService.get<string>('JWT_ACCESS_EXPIRATION_TIME')!;
+
+      const refreshTokenExpiresIn =
+        this.configService.get<string>('NODE_ENV') === 'development'
+          ? '30d'
+          : this.configService.get<string>('JWT_REFRESH_EXPIRATION_TIME')!;
+
       const newPayload = { username: user.username, sub: user.id };
       const newAccessToken = this.jwtService.sign(newPayload, {
-        expiresIn: this.configService.get<string>('JWT_ACCESS_EXPIRATION_TIME'),
+        expiresIn: accessTokenExpiresIn,
       });
       const newRefreshToken = this.jwtService.sign(newPayload, {
-        expiresIn: this.configService.get<string>(
-          'JWT_REFRESH_EXPIRATION_TIME',
-        ),
+        expiresIn: refreshTokenExpiresIn,
       });
+
+      await this.refreshTokensService.createRefreshToken(
+        user.id,
+        newRefreshToken,
+        new Date(Date.now() + toSeconds(refreshTokenExpiresIn) * 1000),
+      );
 
       return {
         accessToken: newAccessToken,
         refreshToken: newRefreshToken,
-        expiresIn: toSeconds(
-          this.configService.get<string>('JWT_ACCESS_EXPIRATION_TIME')!,
-        ),
+        expiresIn: toSeconds(accessTokenExpiresIn),
       };
     } catch {
       throw new UnauthorizedException();
@@ -106,5 +134,15 @@ export class AuthService {
   async register(dto: RegisterDto) {
     const user = await this.usersService.createUser(dto);
     return this.login(user);
+  }
+
+  async logoutFromAllDevices(userId: string) {
+    await this.refreshTokensService.revokeAllUserTokens(userId);
+    return { message: 'SUCCESS' };
+  }
+
+  async logout(refreshToken: string) {
+    await this.refreshTokensService.revokeToken(refreshToken);
+    return { message: 'SUCCESS' };
   }
 }

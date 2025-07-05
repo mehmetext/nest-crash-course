@@ -9,6 +9,7 @@ import { HealthModule } from './health/health.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ProductsModule } from './products/products.module';
 import { UsersModule } from './users/users.module';
+import { RefreshTokensModule } from './refresh-tokens/refresh-tokens.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { UsersModule } from './users/users.module';
     AuthModule,
     UsersModule,
     PrismaModule,
+    RefreshTokensModule,
   ],
   controllers: [AppController],
   providers: [AppService],
