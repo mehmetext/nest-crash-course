@@ -12,7 +12,11 @@ async function bootstrap() {
     }),
   );
 
-  await app.listen(process.env.PORT ?? 4001);
+  if (!process.env.PORT) {
+    throw new Error('PORT is not set');
+  }
+
+  await app.listen(process.env.PORT);
 }
 
 void bootstrap();
