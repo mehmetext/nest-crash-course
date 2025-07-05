@@ -9,7 +9,7 @@ export const toSeconds = (ts: string) => {
       .join(``)
       .match(/\d+/g)
       ?.reduce((acc, cur, idx) => {
-        return acc + Number(cur) * Math.pow(60, 2 - idx);
+        return acc + Number(cur) * Math.pow(60, 3 - idx);
       }, 0) ?? 0
   );
 };
