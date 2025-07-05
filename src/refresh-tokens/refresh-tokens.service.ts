@@ -58,19 +58,6 @@ export class RefreshTokensService {
   }
 
   /**
-   * Süresi dolmuş token'ları temizler
-   */
-  async deleteExpiredTokens() {
-    return this.prisma.refreshToken.deleteMany({
-      where: {
-        expiresAt: {
-          lt: new Date(),
-        },
-      },
-    });
-  }
-
-  /**
    * Token'ın geçerli olup olmadığını kontrol eder
    */
   async isTokenValid(token: string): Promise<boolean> {
@@ -91,5 +78,75 @@ export class RefreshTokensService {
     }
 
     return true;
+  }
+
+  /**
+   * Süresi dolmuş token'ları temizler
+   */
+  async deleteExpiredTokens() {
+    return this.prisma.refreshToken.deleteMany({
+      where: {
+        expiresAt: {
+          lt: new Date(),
+        },
+      },
+    });
+  }
+
+  /*
+   * Geçersiz kılınmış token'ları temizler
+   */
+  async deleteRevokedTokens() {
+    return this.prisma.refreshToken.deleteMany({
+      where: { isRevoked: true },
+    });
+  }
+
+  /**
+   * Belirli bir tarihten eski token'ları temizler
+   */
+  async deleteOldTokens(olderThanDays: number = 30) {
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - olderThanDays);
+
+    return this.prisma.refreshToken.deleteMany({
+      where: {
+        createdAt: {
+          lt: cutoffDate,
+        },
+      },
+    });
+  }
+
+  /**
+   * Tüm temizleme işlemlerini yapar
+   */
+  async cleanupTokens() {
+    const results = {
+      expired: 0,
+      revoked: 0,
+      old: 0,
+    };
+
+    try {
+      // Süresi dolmuş token'ları sil
+      const expiredResult = await this.deleteExpiredTokens();
+      results.expired = expiredResult.count;
+
+      // Geçersiz kılınmış token'ları sil
+      const revokedResult = await this.deleteRevokedTokens();
+      results.revoked = revokedResult.count;
+
+      // 30 günden eski token'ları sil
+      const oldResult = await this.deleteOldTokens(30);
+      results.old = oldResult.count;
+
+      return results;
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new Error(`Token cleanup failed: ${error.message}`);
+      }
+      throw new Error('Token cleanup failed');
+    }
   }
 }

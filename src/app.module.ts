@@ -1,5 +1,6 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
 import { StandardResponseModule } from 'nest-standard-response';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -8,8 +9,8 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware';
 import { HealthModule } from './health/health.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ProductsModule } from './products/products.module';
-import { UsersModule } from './users/users.module';
 import { RefreshTokensModule } from './refresh-tokens/refresh-tokens.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { RefreshTokensModule } from './refresh-tokens/refresh-tokens.module';
     UsersModule,
     PrismaModule,
     RefreshTokensModule,
+    ScheduleModule.forRoot(),
   ],
   controllers: [AppController],
   providers: [AppService],
