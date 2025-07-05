@@ -1,6 +1,8 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
 import { ScheduleModule } from '@nestjs/schedule';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { StandardResponseModule } from 'nest-standard-response';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -23,9 +25,12 @@ import { UsersModule } from './users/users.module';
     PrismaModule,
     RefreshTokensModule,
     ScheduleModule.forRoot(),
+    ThrottlerModule.forRoot({
+      throttlers: [{ ttl: 60000, limit: 10 }],
+    }),
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
