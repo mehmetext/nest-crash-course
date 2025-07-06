@@ -6,13 +6,13 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { StandardResponseModule } from 'nest-standard-response';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { AuthModule } from './auth/auth.module';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
-import { HealthModule } from './health/health.module';
-import { PrismaModule } from './prisma/prisma.module';
-import { ProductsModule } from './products/products.module';
-import { RefreshTokensModule } from './refresh-tokens/refresh-tokens.module';
-import { UsersModule } from './users/users.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { HealthModule } from './modules/health/health.module';
+import { PrismaModule } from './modules/prisma/prisma.module';
+import { ProductsModule } from './modules/products/products.module';
+import { RefreshTokensModule } from './modules/refresh-tokens/refresh-tokens.module';
+import { UsersModule } from './modules/users/users.module';
 
 @Module({
   imports: [
