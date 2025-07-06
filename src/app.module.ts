@@ -9,6 +9,7 @@ import { AppService } from './app.service';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
 import { AuthModule } from './modules/auth/auth.module';
 import { HealthModule } from './modules/health/health.module';
+import { PasswordResetTokensModule } from './modules/password-reset-tokens/password-reset-tokens.module';
 import { PrismaModule } from './modules/prisma/prisma.module';
 import { ProductsModule } from './modules/products/products.module';
 import { RefreshTokensModule } from './modules/refresh-tokens/refresh-tokens.module';
@@ -44,6 +45,7 @@ import { UsersModule } from './modules/users/users.module';
         },
       ],
     }),
+    PasswordResetTokensModule,
   ],
   controllers: [AppController],
   providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],
