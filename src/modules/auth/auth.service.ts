@@ -81,7 +81,10 @@ export class AuthService {
         throw new UnauthorizedException();
       }
 
-      const payload = this.jwtService.verify<{ sub: string }>(dto.refreshToken);
+      const payload = this.jwtService.verify<{ sub: string }>(
+        dto.refreshToken,
+        { secret: this.configService.get<string>('JWT_REFRESH_SECRET') },
+      );
       const user = await this.usersService.findById(payload.sub);
       if (!user) {
         throw new UnauthorizedException();
@@ -101,9 +104,11 @@ export class AuthService {
 
       const newPayload = { username: user.username, sub: user.id };
       const newAccessToken = this.jwtService.sign(newPayload, {
+        secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
         expiresIn: accessTokenExpiresIn,
       });
       const newRefreshToken = this.jwtService.sign(newPayload, {
+        secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
         expiresIn: refreshTokenExpiresIn,
       });
 
