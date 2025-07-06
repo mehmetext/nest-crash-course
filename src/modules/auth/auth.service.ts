@@ -139,7 +139,9 @@ export class AuthService {
       to: [user.email],
       subject: 'Hoş Geldin!',
       html: `<h1>Selam, ${user.username}!</h1>
-      <p>Aramız hoş geldin.</p>`,
+      <p>Aramız hoş geldin.</p>
+      <p>Aşağıdaki linkten hesabınızı doğrulayabilirsiniz:</p>
+      <a href="${process.env.FRONTEND_URL}/verify-email">Doğrula</a>`,
     });
     return this.login(user);
   }
