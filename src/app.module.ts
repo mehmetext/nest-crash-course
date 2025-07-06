@@ -1,3 +1,4 @@
+import { CacheModule } from '@nestjs/cache-manager';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
@@ -13,19 +14,17 @@ import { HealthModule } from './modules/health/health.module';
 import { MailModule } from './modules/mail/mail.module';
 import { PasswordResetTokensModule } from './modules/password-reset-tokens/password-reset-tokens.module';
 import { PrismaModule } from './modules/prisma/prisma.module';
-import { ProductsModule } from './modules/products/products.module';
 import { RefreshTokensModule } from './modules/refresh-tokens/refresh-tokens.module';
+import { TmdbModule } from './modules/tmdb/tmdb.module';
+import { UserContentModule } from './modules/user-content/user-content.module';
 import { UsersModule } from './modules/users/users.module';
 
 @Module({
   imports: [
     StandardResponseModule.forRoot(),
-    ProductsModule,
-    HealthModule,
     ConfigModule.forRoot({ isGlobal: true }),
-    AuthModule,
-    UsersModule,
     PrismaModule,
+    HealthModule,
     RefreshTokensModule,
     ScheduleModule.forRoot(),
     ThrottlerModule.forRoot({
@@ -47,9 +46,16 @@ import { UsersModule } from './modules/users/users.module';
         },
       ],
     }),
-    PasswordResetTokensModule,
+    CacheModule.register({
+      isGlobal: true,
+    }),
     MailModule,
     EmailVerificationTokensModule,
+    PasswordResetTokensModule,
+    AuthModule,
+    UserContentModule,
+    UsersModule,
+    TmdbModule,
   ],
   controllers: [AppController],
   providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],

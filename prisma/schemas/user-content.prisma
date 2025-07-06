@@ -18,8 +18,8 @@ model UserContent {
 }
 
 enum ContentType {
-  MOVIE
-  TV
+  movie
+  tv
 }
 
 enum WatchStatus {
