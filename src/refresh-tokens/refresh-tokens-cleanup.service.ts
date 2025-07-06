@@ -8,47 +8,34 @@ export class RefreshTokensCleanupService {
   constructor(private readonly refreshTokensService: RefreshTokensService) {}
 
   /*
-   * Her gün gece yarısı çalışır ve eski token'ları temizler
+   * Her gün gece yarısı çalışır ve sadece süresi dolmuş token'ları temizler
+   * Bu, veritabanı yükünü azaltmak için sadece expired token'ları temizler
    */
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async cleanupExpiredTokens() {
-    this.logger.log('🔄 Starting daily refresh token cleanup...');
-
-    try {
-      const results = await this.refreshTokensService.cleanupTokens();
-
-      this.logger.log(
-        `✅ Cleanup completed: ${results.expired} expired, ${results.revoked} revoked, ${results.old} old tokens deleted`,
-      );
-    } catch (error) {
-      this.logger.error('❌ Error during token cleanup:', error);
-    }
-  }
-
-  /**
-   * Her saat başı çalışır ve sadece süresi dolmuş token'ları temizler
-   */
-  @Cron(CronExpression.EVERY_HOUR)
-  async cleanupExpiredTokensHourly() {
-    this.logger.debug('🔄 Hourly cleanup: removing expired tokens...');
+    this.logger.log('🔄 Starting daily expired token cleanup...');
 
     try {
       const result = await this.refreshTokensService.deleteExpiredTokens();
 
       if (result.count > 0) {
         this.logger.log(
-          `✅ Hourly cleanup: ${result.count} expired tokens deleted`,
+          `✅ Daily cleanup: ${result.count} expired tokens deleted`,
         );
+      } else {
+        this.logger.debug('✅ Daily cleanup: No expired tokens found');
       }
     } catch (error) {
-      this.logger.error('❌ Error during hourly cleanup:', error);
+      this.logger.error('❌ Error during daily token cleanup:', error);
+      // Kritik hata durumunda tekrar deneme mekanizması eklenebilir
     }
   }
 
   /**
-   * Her hafta Pazar günü çalışır ve kapsamlı temizlik yapar
+   * Her hafta Pazar günü saat 02:00'de çalışır ve kapsamlı temizlik yapar
+   * Gece yarısı temizliğinden 2 saat sonra çalışarak çakışmayı önler
    */
-  @Cron(CronExpression.EVERY_WEEK)
+  @Cron('0 2 * * 0') // Her Pazar saat 02:00
   async weeklyDeepCleanup() {
     this.logger.log('🔄 Starting weekly deep cleanup...');
 
@@ -60,6 +47,30 @@ export class RefreshTokensCleanupService {
       );
     } catch (error) {
       this.logger.error('❌ Error during weekly cleanup:', error);
+      // Haftalık temizlik kritik olduğu için daha detaylı hata yönetimi
+      throw error; // Üst seviyeye hata fırlat
+    }
+  }
+
+  /**
+   * Manuel temizlik için kullanılabilir metod
+   * Test veya acil durumlar için
+   * Bu metod cron ile çalışmaz, sadece manuel olarak çağrılır
+   */
+  async manualCleanup() {
+    this.logger.log('🔄 Starting manual cleanup...');
+
+    try {
+      const results = await this.refreshTokensService.cleanupTokens();
+
+      this.logger.log(
+        `✅ Manual cleanup completed: ${results.expired} expired, ${results.revoked} revoked, ${results.old} old tokens deleted`,
+      );
+
+      return results;
+    } catch (error) {
+      this.logger.error('❌ Error during manual cleanup:', error);
+      throw error;
     }
   }
 }
