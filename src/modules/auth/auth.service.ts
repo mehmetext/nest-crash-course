@@ -33,7 +33,7 @@ export class AuthService {
   }
 
   async login(user: Omit<User, 'password'>) {
-    const payload = { username: user.username, sub: user.id };
+    const payload = { sub: user.id };
     const accessTokenExpiresIn =
       this.configService.get<string>('NODE_ENV') === 'development'
         ? '30d'
