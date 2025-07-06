@@ -6,6 +6,7 @@ import * as bcrypt from 'bcryptjs';
 import { toSeconds } from 'src/common/utils/to-seconds';
 import { RefreshTokensService } from 'src/modules/refresh-tokens/refresh-tokens.service';
 import { UsersService } from 'src/modules/users/users.service';
+import { MailService } from '../mail/mail.service';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -17,6 +18,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly refreshTokensService: RefreshTokensService,
+    private readonly mailService: MailService,
   ) {
     if (
       !this.configService.get<string>('JWT_ACCESS_SECRET') ||
@@ -133,6 +135,12 @@ export class AuthService {
 
   async register(dto: RegisterDto) {
     const user = await this.usersService.createUser(dto);
+    await this.mailService.sendMail({
+      to: [user.email],
+      subject: 'Hoş Geldin!',
+      html: `<h1>Selam, ${user.username}!</h1>
+      <p>Aramız hoş geldin.</p>`,
+    });
     return this.login(user);
   }
 

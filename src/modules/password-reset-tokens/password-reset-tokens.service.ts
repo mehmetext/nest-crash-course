@@ -1,14 +1,17 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import * as crypto from 'crypto';
+import { MailService } from '../mail/mail.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @Injectable()
 export class PasswordResetTokensService {
-  private readonly logger = new Logger(PasswordResetTokensService.name);
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly mailService: MailService,
+  ) {}
 
   async forgotPassword(dto: ForgotPasswordDto) {
     const user = await this.prisma.user.findUnique({
@@ -30,8 +33,11 @@ export class PasswordResetTokensService {
       },
     });
 
-    // TODO: send email
-    this.logger.log(`${dto.email} => ${token.token}`);
+    await this.mailService.sendMail({
+      to: [dto.email],
+      subject: 'Şifre Sıfırlama',
+      text: `Şifrenizi sıfırlamak için aşağıdaki linki kullanınız: /reset-password?token=${token.token}`,
+    });
 
     return { message: 'SUCCESS' };
   }
