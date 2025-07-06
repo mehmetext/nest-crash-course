@@ -25,6 +25,7 @@ export class AuthController {
     return this.authService.login(req.user as Omit<User, 'password'>);
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Post('refresh')
   refreshToken(@Body() dto: RefreshTokenDto) {
     return this.authService.refreshToken(dto);
@@ -41,6 +42,7 @@ export class AuthController {
     return this.authService.register(dto);
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Post('logout')
   logout(@Body() dto: RefreshTokenDto) {
     return this.authService.logout(dto.refreshToken);
