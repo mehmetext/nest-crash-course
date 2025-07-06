@@ -6,10 +6,11 @@ import * as bcrypt from 'bcryptjs';
 import { toSeconds } from 'src/common/utils/to-seconds';
 import { RefreshTokensService } from 'src/modules/refresh-tokens/refresh-tokens.service';
 import { UsersService } from 'src/modules/users/users.service';
-import { MailService } from '../mail/mail.service';
+import { EmailVerificationTokensService } from '../email-verification-tokens/email-verification-tokens.service';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
+import { VerifyEmailDto } from './dto/verify-email.dto';
 
 @Injectable()
 export class AuthService {
@@ -18,16 +19,17 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly refreshTokensService: RefreshTokensService,
-    private readonly mailService: MailService,
+    private readonly emailVerificationTokensService: EmailVerificationTokensService,
   ) {
     if (
       !this.configService.get<string>('JWT_ACCESS_SECRET') ||
       !this.configService.get<string>('JWT_ACCESS_EXPIRATION_TIME') ||
       !this.configService.get<string>('JWT_REFRESH_SECRET') ||
-      !this.configService.get<string>('JWT_REFRESH_EXPIRATION_TIME')
+      !this.configService.get<string>('JWT_REFRESH_EXPIRATION_TIME') ||
+      !this.configService.get<string>('FRONTEND_URL')
     ) {
       throw new Error(
-        'JWT_ACCESS_SECRET, JWT_ACCESS_EXPIRATION_TIME, JWT_REFRESH_SECRET, JWT_REFRESH_EXPIRATION_TIME are not defined in environment variables',
+        'JWT_ACCESS_SECRET, JWT_ACCESS_EXPIRATION_TIME, JWT_REFRESH_SECRET, JWT_REFRESH_EXPIRATION_TIME, FRONTEND_URL are not defined in environment variables',
       );
     }
   }
@@ -135,15 +137,14 @@ export class AuthService {
 
   async register(dto: RegisterDto) {
     const user = await this.usersService.createUser(dto);
-    await this.mailService.sendMail({
-      to: [user.email],
-      subject: 'Hoş Geldin!',
-      html: `<h1>Selam, ${user.username}!</h1>
-      <p>Aramız hoş geldin.</p>
-      <p>Aşağıdaki linkten hesabınızı doğrulayabilirsiniz:</p>
-      <a href="${process.env.FRONTEND_URL}/verify-email">Doğrula</a>`,
-    });
+
+    await this.emailVerificationTokensService.createToken(user.id);
+
     return this.login(user);
+  }
+
+  async verifyEmail(dto: VerifyEmailDto) {
+    return await this.emailVerificationTokensService.verifyToken(dto.token);
   }
 
   async logoutFromAllDevices(userId: string) {

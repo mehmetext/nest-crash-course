@@ -14,15 +14,17 @@ datasource db {
 }
 
 model User {
-  id                  String               @id @default(uuid())
-  name                String               @map("name")
-  surname             String               @map("surname")
-  username            String               @unique
-  email               String               @unique
-  password            String
-  refreshTokens       RefreshToken[]
-  passwordResetTokens PasswordResetToken[]
-  role                UserRole             @default(USER)
+  id                      String                   @id @default(uuid())
+  name                    String
+  surname                 String
+  username                String                   @unique
+  email                   String                   @unique
+  password                String
+  isEmailVerified         Boolean                  @default(false) @map("is_email_verified")
+  refreshTokens           RefreshToken[]
+  passwordResetTokens     PasswordResetToken[]
+  emailVerificationTokens EmailVerificationToken[]
+  role                    UserRole                 @default(USER)
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -33,6 +35,23 @@ model User {
 enum UserRole {
   ADMIN
   USER
+}
+
+model EmailVerificationToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id])
+  expiresAt DateTime @map("expires_at")
+  isUsed    Boolean  @default(false) @map("is_used")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+  @@map("email_verification_tokens")
 }
 
 model RefreshToken {

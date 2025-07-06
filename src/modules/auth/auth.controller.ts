@@ -2,18 +2,21 @@ import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { User } from '@prisma/client';
 import { Request } from 'express';
+import { EmailVerificationTokensService } from '../email-verification-tokens/email-verification-tokens.service';
 import { ForgotPasswordDto } from '../password-reset-tokens/dto/forgot-password.dto';
 import { ResetPasswordDto } from '../password-reset-tokens/dto/reset-password.dto';
 import { PasswordResetTokensService } from '../password-reset-tokens/password-reset-tokens.service';
 import { AuthService } from './auth.service';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
+import { VerifyEmailDto } from './dto/verify-email.dto';
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly passwordResetTokensService: PasswordResetTokensService,
+    private readonly emailVerificationTokensService: EmailVerificationTokensService,
   ) {}
 
   @UseGuards(AuthGuard('local'))
@@ -57,5 +60,19 @@ export class AuthController {
   @Post('reset-password')
   resetPassword(@Body() dto: ResetPasswordDto) {
     return this.passwordResetTokensService.resetPassword(dto);
+  }
+
+  @Post('verify-email')
+  verifyEmail(@Body() dto: VerifyEmailDto) {
+    return this.authService.verifyEmail(dto);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get('resend-email-verification')
+  resendVerificationEmail(@Req() req: Request) {
+    return this.emailVerificationTokensService.createToken(
+      (req.user as User).id,
+      true,
+    );
   }
 }

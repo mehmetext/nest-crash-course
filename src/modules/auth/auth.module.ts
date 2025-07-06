@@ -3,6 +3,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { RefreshTokensModule } from 'src/modules/refresh-tokens/refresh-tokens.module';
 import { UsersModule } from 'src/modules/users/users.module';
+import { EmailVerificationTokensModule } from '../email-verification-tokens/email-verification-tokens.module';
 import { PasswordResetTokensModule } from '../password-reset-tokens/password-reset-tokens.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
@@ -18,6 +19,7 @@ import { LocalStrategy } from './strategies/local.strategy';
     JwtModule.register({}),
     RefreshTokensModule,
     PasswordResetTokensModule,
+    EmailVerificationTokensModule,
   ],
 })
 export class AuthModule {}

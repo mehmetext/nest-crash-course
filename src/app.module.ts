@@ -15,6 +15,7 @@ import { PrismaModule } from './modules/prisma/prisma.module';
 import { ProductsModule } from './modules/products/products.module';
 import { RefreshTokensModule } from './modules/refresh-tokens/refresh-tokens.module';
 import { UsersModule } from './modules/users/users.module';
+import { EmailVerificationTokensModule } from './modules/email-verification-tokens/email-verification-tokens.module';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { UsersModule } from './modules/users/users.module';
     }),
     PasswordResetTokensModule,
     MailModule,
+    EmailVerificationTokensModule,
   ],
   controllers: [AppController],
   providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],
