@@ -7,6 +7,8 @@ import { Language } from 'src/common/constants/languages';
 @Injectable()
 export class TmdbService {
   private readonly logger = new Logger(TmdbService.name);
+  private readonly URL = 'https://api.themoviedb.org/3';
+
   constructor(
     private readonly cacheManager: Cache,
     private readonly configService: ConfigService,
@@ -30,17 +32,9 @@ export class TmdbService {
       return cached;
     }
 
-    const response = await fetch(
-      `https://api.themoviedb.org/3/${contentType}/${tmdbId}?language=${language}`,
-      {
-        headers: {
-          accept: 'application/json',
-          Authorization: `Bearer ${this.configService.get('TMDB_API_KEY')}`,
-        },
-      },
+    const data = await this.fetchTmdb<Movie | TV>(
+      `${contentType}/${tmdbId}?language=${language}`,
     );
-
-    const data = (await response.json()) as Movie | TV;
 
     await this.cacheManager.set(
       `tmdb:${contentType}:${tmdbId}:${language}`,
@@ -49,5 +43,23 @@ export class TmdbService {
     );
 
     return data;
+  }
+
+  private async fetchTmdb<T>(url: string): Promise<T> {
+    try {
+      const response = await fetch(`${this.URL}/${url}`, {
+        headers: {
+          accept: 'application/json',
+          Authorization: `Bearer ${this.configService.get('TMDB_API_KEY')}`,
+        },
+      });
+
+      const data = (await response.json()) as T;
+
+      return data;
+    } catch (error) {
+      this.logger.error(`Error fetching TMDB data: ${error}`);
+      throw error;
+    }
   }
 }
