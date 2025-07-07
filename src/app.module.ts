@@ -25,7 +25,6 @@ import { UsersModule } from './modules/users/users.module';
     ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
     HealthModule,
-    RefreshTokensModule,
     ScheduleModule.forRoot(),
     ThrottlerModule.forRoot({
       throttlers: [
@@ -52,6 +51,7 @@ import { UsersModule } from './modules/users/users.module';
     MailModule,
     EmailVerificationTokensModule,
     PasswordResetTokensModule,
+    RefreshTokensModule,
     AuthModule,
     UserContentModule,
     UsersModule,

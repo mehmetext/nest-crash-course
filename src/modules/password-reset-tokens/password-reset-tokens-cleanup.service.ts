@@ -11,7 +11,6 @@ export class PasswordResetTokensCleanupService {
 
   /**
    * Her gün gece yarısı çalışır ve sadece süresi dolmuş token'ları temizler
-   *
    */
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async cleanupExpiredTokens() {
