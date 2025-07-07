@@ -17,6 +17,7 @@ import { Request } from 'express';
 import { Language } from 'src/common/constants/languages';
 import { ContentService } from './content.service';
 import { AddToUserListDto } from './dto/add-to-user-list.dto';
+import { SearchContentDto } from './dto/search-content.dto';
 import { UpdateUserListDto } from './dto/update-user-list.dto';
 
 @UseGuards(AuthGuard('jwt'))
@@ -53,6 +54,16 @@ export class ContentController {
     return this.contentService.updateUserList(req.user as User, id, dto);
   }
 
+  @Get('recommendations')
+  getRecommendations(@Req() req: Request) {
+    return this.contentService.getRecommendations(req.user as User);
+  }
+
+  @Get('search')
+  search(@Query() dto: SearchContentDto) {
+    return this.contentService.search(dto.query, dto.contentType);
+  }
+
   @Get('/:contentType/:id')
   getContentDetails(
     @Param('contentType', new ParseEnumPipe(ContentType))
@@ -67,10 +78,5 @@ export class ContentController {
     language: Language,
   ) {
     return this.contentService.getContentDetails(contentType, id, language);
-  }
-
-  @Get('recommendations')
-  getRecommendations(@Req() req: Request) {
-    return this.contentService.getRecommendations(req.user as User);
   }
 }

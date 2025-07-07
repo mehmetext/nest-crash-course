@@ -20,6 +20,73 @@ export class TmdbService {
   }
 
   /*
+   * Search
+   */
+  async search(
+    query: string,
+    contentType?: ContentType,
+    language: Language = Language.TR,
+  ) {
+    const cached = await this.cacheManager.get<
+      Array<(SearchMovie | SearchTv) & { media_type: ContentType }>
+    >(`tmdb:search:${query}:${contentType}:${language}`);
+
+    if (cached) {
+      this.logger.log(
+        `Cache hit: tmdb:search:${query}:${contentType}:${language}`,
+      );
+      return cached;
+    }
+
+    let movies: SearchMoviesResponse | undefined;
+    let tv: SearchTvResponse | undefined;
+
+    if (contentType !== ContentType.movie) {
+      tv = await this.fetchTmdb<SearchTvResponse>(
+        `search/tv?query=${query}&language=${language}`,
+      );
+    }
+    if (contentType !== ContentType.tv) {
+      movies = await this.fetchTmdb<SearchMoviesResponse>(
+        `search/movie?query=${query}&language=${language}`,
+      );
+    }
+
+    const combinedResults: Array<
+      (SearchMovie | SearchTv) & { media_type: ContentType }
+    > = [];
+
+    const moviesArray = movies?.results || [];
+    const tvArray = tv?.results || [];
+
+    const maxLength = Math.max(moviesArray.length, tvArray.length);
+
+    for (let i = 0; i < maxLength; i++) {
+      if (i < moviesArray.length) {
+        combinedResults.push({
+          media_type: ContentType.movie,
+          ...moviesArray[i],
+        });
+      }
+
+      if (i < tvArray.length) {
+        combinedResults.push({
+          media_type: ContentType.tv,
+          ...tvArray[i],
+        });
+      }
+    }
+
+    await this.cacheManager.set(
+      `tmdb:search:${query}:${contentType}:${language}`,
+      combinedResults,
+      3600000,
+    );
+
+    return combinedResults;
+  }
+
+  /*
    * Recommendations
    */
   async getRecommendations(

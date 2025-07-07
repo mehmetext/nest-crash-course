@@ -172,4 +172,8 @@ export class ContentService {
 
     return recommendations;
   }
+
+  async search(query: string, contentType?: ContentType) {
+    return this.tmdbService.search(query, contentType);
+  }
 }
