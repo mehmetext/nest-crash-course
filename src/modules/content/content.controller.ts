@@ -71,4 +71,10 @@ export class ContentController {
   ) {
     return this.contentService.getContentDetails(contentType, id, language);
   }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get('recommendations')
+  getRecommendations(@Req() req: Request) {
+    return this.contentService.getRecommendations(req.user as User);
+  }
 }

@@ -20,6 +20,38 @@ export class TmdbService {
   }
 
   /*
+   * Recommendations
+   */
+  async getRecommendations(
+    contentType: ContentType,
+    tmdbId: string,
+    language: Language = Language.TR,
+  ) {
+    const cached = await this.cacheManager.get<
+      RecommendationMoviesResponse | RecommendationTvResponse
+    >(`tmdb:recommendations:${contentType}:${tmdbId}:${language}`);
+
+    if (cached) {
+      this.logger.log(
+        `Cache hit: tmdb:recommendations:${contentType}:${tmdbId}:${language}`,
+      );
+      return cached;
+    }
+
+    const data = await this.fetchTmdb<
+      RecommendationMoviesResponse | RecommendationTvResponse
+    >(`${contentType}/${tmdbId}/recommendations?language=${language}`);
+
+    await this.cacheManager.set(
+      `tmdb:recommendations:${contentType}:${tmdbId}:${language}`,
+      data,
+      3600000,
+    );
+
+    return data;
+  }
+
+  /*
    * Popular Movies & TV
    */
   async getPopular(
@@ -55,18 +87,15 @@ export class TmdbService {
    * Now Playing
    */
   async getNowPlaying(
-    contentType: ContentType,
     language: Language = Language.TR,
     region: Language = Language.TR,
   ) {
     const cached = await this.cacheManager.get<NowPlayingMoviesResponse>(
-      `tmdb:now-playing:${contentType}:${language}:${region}`,
+      `tmdb:now-playing:${language}:${region}`,
     );
 
     if (cached) {
-      this.logger.log(
-        `Cache hit: tmdb:now-playing:${contentType}:${language}:${region}`,
-      );
+      this.logger.log(`Cache hit: tmdb:now-playing:${language}:${region}`);
       return cached;
     }
 
@@ -75,7 +104,7 @@ export class TmdbService {
     );
 
     await this.cacheManager.set(
-      `tmdb:now-playing:${contentType}:${language}:${region}`,
+      `tmdb:now-playing:${language}:${region}`,
       data,
       3600000,
     );

@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { ContentType, User } from '@prisma/client';
 import { Language } from 'src/common/constants/languages';
+import { randomNumbers } from 'src/common/utils/random-number';
 import { PrismaService } from '../prisma/prisma.service';
 import { TmdbService } from '../tmdb/tmdb.service';
 import { AddToUserListDto } from './dto/add-to-user-list.dto';
@@ -20,24 +21,24 @@ export class ContentService {
   async explore() {
     const [
       trendingMovies,
-      popularMovies,
-      nowPlayingMovies,
-      popularTv,
       trendingTv,
+      popularMovies,
+      popularTv,
+      nowPlayingMovies,
     ] = await Promise.all([
       this.tmdbService.getTrending(ContentType.movie),
       this.tmdbService.getTrending(ContentType.tv),
       this.tmdbService.getPopular(ContentType.movie),
       this.tmdbService.getPopular(ContentType.tv),
-      this.tmdbService.getNowPlaying(ContentType.movie),
+      this.tmdbService.getNowPlaying(),
     ]);
 
     return {
       trendingMovies: trendingMovies.results.slice(0, 5),
-      popularMovies: popularMovies.results.slice(0, 5),
-      nowPlayingMovies: nowPlayingMovies.results.slice(0, 5),
-      popularTv: popularTv.results.slice(0, 5),
       trendingTv: trendingTv.results.slice(0, 5),
+      popularMovies: popularMovies.results.slice(0, 5),
+      popularTv: popularTv.results.slice(0, 5),
+      nowPlayingMovies: nowPlayingMovies.results.slice(0, 5),
     };
   }
 
@@ -133,5 +134,42 @@ export class ContentService {
     } catch {
       throw new NotFoundException();
     }
+  }
+
+  async getRecommendations(
+    user: User,
+  ): Promise<(RecommendationMovies | RecommendationTv)[]> {
+    const list = await this.prismaService.userContent.findMany({
+      where: { userId: user.id },
+    });
+
+    const randomIndexes = randomNumbers(0, list.length - 1, 3);
+    const randomItems = randomIndexes.map((index) => list[index]);
+
+    const contentDetails = (
+      await Promise.allSettled(
+        randomItems.map((item) =>
+          this.tmdbService.getRecommendations(
+            item.contentType,
+            item.tmdbId,
+            Language.TR,
+          ),
+        ),
+      )
+    ).map((result) => {
+      if (result.status === 'fulfilled') {
+        return result.value.results;
+      } else {
+        return [];
+      }
+    });
+
+    const recommendations = contentDetails.flat();
+
+    if (recommendations.length === 0) {
+      return this.getRecommendations(user);
+    }
+
+    return recommendations;
   }
 }
