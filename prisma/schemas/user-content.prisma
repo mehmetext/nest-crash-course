@@ -1,13 +1,12 @@
 model UserContent {
   id          String      @id @default(uuid())
-  tmdbId      Int         @map("tmdb_id")
+  tmdbId      String      @map("tmdb_id")
   contentType ContentType @map("content_type")
   watchStatus WatchStatus @map("watch_status")
   rating      Float?
   notes       String?
   userId      String      @map("user_id")
   user        User        @relation(fields: [userId], references: [id])
-  content     String
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -23,8 +22,8 @@ enum ContentType {
 }
 
 enum WatchStatus {
-  WATCHED
-  WATCHING
-  PLAN_TO_WATCH
-  DROPPED
+  watched
+  watching
+  planToWatch
+  dropped
 }

@@ -1,5 +1,5 @@
 import { Cache } from '@nestjs/cache-manager';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ContentType } from '@prisma/client';
 import { Language } from 'src/common/constants/languages';
@@ -121,7 +121,7 @@ export class TmdbService {
   async getContentDetails(
     contentType: ContentType,
     tmdbId: string,
-    language: Language = Language.EN,
+    language: Language = Language.TR,
   ) {
     const cached = await this.cacheManager.get<Movie | TV>(
       `tmdb:${contentType}:${tmdbId}:${language}`,
@@ -157,6 +157,10 @@ export class TmdbService {
       });
 
       const data = (await response.json()) as T;
+
+      if (!response.ok) {
+        throw new NotFoundException();
+      }
 
       return data;
     } catch (error) {
