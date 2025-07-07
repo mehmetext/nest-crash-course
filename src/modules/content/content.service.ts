@@ -8,6 +8,7 @@ import { Language } from 'src/common/constants/languages';
 import { PrismaService } from '../prisma/prisma.service';
 import { TmdbService } from '../tmdb/tmdb.service';
 import { AddToUserListDto } from './dto/add-to-user-list.dto';
+import { UpdateUserListDto } from './dto/update-user-list.dto';
 
 @Injectable()
 export class ContentService {
@@ -115,6 +116,20 @@ export class ContentService {
         },
       });
       return { message: 'SUCCESS' };
+    } catch {
+      throw new NotFoundException();
+    }
+  }
+
+  async updateUserList(user: User, id: string, dto: UpdateUserListDto) {
+    try {
+      return await this.prismaService.userContent.update({
+        where: {
+          id,
+          userId: user.id,
+        },
+        data: dto,
+      });
     } catch {
       throw new NotFoundException();
     }

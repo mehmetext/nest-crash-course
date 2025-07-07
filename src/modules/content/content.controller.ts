@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   ParseEnumPipe,
+  Patch,
   Post,
   Query,
   Req,
@@ -16,6 +17,7 @@ import { Request } from 'express';
 import { Language } from 'src/common/constants/languages';
 import { ContentService } from './content.service';
 import { AddToUserListDto } from './dto/add-to-user-list.dto';
+import { UpdateUserListDto } from './dto/update-user-list.dto';
 
 @Controller('content')
 export class ContentController {
@@ -42,6 +44,16 @@ export class ContentController {
   @Delete('user/list/:id')
   removeFromUserList(@Req() req: Request, @Param('id') id: string) {
     return this.contentService.removeFromUserList(req.user as User, id);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Patch('user/list/:id')
+  updateUserList(
+    @Req() req: Request,
+    @Param('id') id: string,
+    @Body() dto: UpdateUserListDto,
+  ) {
+    return this.contentService.updateUserList(req.user as User, id, dto);
   }
 
   @Get('/:contentType/:id')
