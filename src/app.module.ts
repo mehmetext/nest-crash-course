@@ -18,6 +18,7 @@ import { RefreshTokensModule } from './modules/refresh-tokens/refresh-tokens.mod
 import { TmdbModule } from './modules/tmdb/tmdb.module';
 import { UserContentModule } from './modules/user-content/user-content.module';
 import { UsersModule } from './modules/users/users.module';
+import { ContentModule } from './modules/content/content.module';
 
 @Module({
   imports: [
@@ -56,6 +57,7 @@ import { UsersModule } from './modules/users/users.module';
     UserContentModule,
     UsersModule,
     TmdbModule,
+    ContentModule,
   ],
   controllers: [AppController],
   providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],
