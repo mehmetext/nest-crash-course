@@ -19,6 +19,7 @@ import { ContentService } from './content.service';
 import { AddToUserListDto } from './dto/add-to-user-list.dto';
 import { UpdateUserListDto } from './dto/update-user-list.dto';
 
+@UseGuards(AuthGuard('jwt'))
 @Controller('content')
 export class ContentController {
   constructor(private readonly contentService: ContentService) {}
@@ -28,25 +29,21 @@ export class ContentController {
     return this.contentService.explore();
   }
 
-  @UseGuards(AuthGuard('jwt'))
   @Get('user/list')
   userlist(@Req() req: Request) {
     return this.contentService.userList(req.user as User);
   }
 
-  @UseGuards(AuthGuard('jwt'))
   @Post('user/list')
   addToUserList(@Req() req: Request, @Body() dto: AddToUserListDto) {
     return this.contentService.addToUserList(req.user as User, dto);
   }
 
-  @UseGuards(AuthGuard('jwt'))
   @Delete('user/list/:id')
   removeFromUserList(@Req() req: Request, @Param('id') id: string) {
     return this.contentService.removeFromUserList(req.user as User, id);
   }
 
-  @UseGuards(AuthGuard('jwt'))
   @Patch('user/list/:id')
   updateUserList(
     @Req() req: Request,
@@ -72,7 +69,6 @@ export class ContentController {
     return this.contentService.getContentDetails(contentType, id, language);
   }
 
-  @UseGuards(AuthGuard('jwt'))
   @Get('recommendations')
   getRecommendations(@Req() req: Request) {
     return this.contentService.getRecommendations(req.user as User);
