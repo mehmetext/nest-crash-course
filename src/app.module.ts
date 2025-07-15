@@ -10,6 +10,7 @@ import { AppService } from './app.service';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
 import { AuthModule } from './modules/auth/auth.module';
 import { ContentModule } from './modules/content/content.module';
+import { ConversationModule } from './modules/conversation/conversation.module';
 import { EmailVerificationTokensModule } from './modules/email-verification-tokens/email-verification-tokens.module';
 import { HealthModule } from './modules/health/health.module';
 import { MailModule } from './modules/mail/mail.module';
@@ -56,6 +57,7 @@ import { UsersModule } from './modules/users/users.module';
     UsersModule,
     TmdbModule,
     ContentModule,
+    ConversationModule,
   ],
   controllers: [AppController],
   providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],
